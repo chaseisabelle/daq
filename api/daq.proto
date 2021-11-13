@@ -1,0 +1,30 @@
+syntax = "proto3";
+package DAQ;
+option go_package = ".;daqpb";
+
+message EnqueueRequest {
+  string body = 1;
+}
+
+message EnqueueResponse {
+}
+
+message DequeueRequest {}
+
+message DequeueResponse {
+  string body = 1;
+  string type = 2;
+}
+
+message RequeueRequest {
+  string body = 1;
+}
+
+message RequeueResponse {
+}
+
+service Service {
+  rpc Enqueue(EnqueueRequest) returns (EnqueueResponse);
+  rpc Dequeue(DequeueRequest) returns (DequeueResponse);
+  rpc Requeue(RequeueRequest) returns (RequeueResponse);
+}
