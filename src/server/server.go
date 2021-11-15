@@ -1,86 +1,70 @@
 package server
 
 import (
-	"context"
-	"github.com/chaseisabelle/daq/pkg"
-	"github.com/chaseisabelle/daq/src/message"
-	"github.com/chaseisabelle/daq/src/queue"
-	"google.golang.org/grpc"
-	"net"
+	"errors"
+	"github.com/chaseisabelle/daq/src/server/rest"
+	"github.com/chaseisabelle/daq/src/server/rpc"
+	"github.com/chaseisabelle/daq/src/service"
 )
 
 type Server struct {
-	server   *grpc.Server
-	listener *net.Listener
-	queue    *queue.Queue
+	service *service.Service
+	rpc     *rpc.RPC
+	rest    *rest.REST
 }
 
-func New(adr string) (*Server, error) {
-	lis, err := net.Listen("tcp", adr)
+func New(ser *service.Service) (*Server, error) {
+	return &Server{
+		service: ser,
+	}, nil
+}
+
+func (s *Server) RPC(adr string) (*rpc.RPC, error) {
+	rpc, err := rpc.New(adr, s.service)
 
 	if err != nil {
 		return nil, err
 	}
 
-	srv := grpc.NewServer()
-	q, err := queue.New()
+	s.rpc = rpc
+
+	return rpc, nil
+}
+
+func (s *Server) REST(adr string) (*rest.REST, error) {
+	rst, err := rest.New(adr, s.service)
 
 	if err != nil {
 		return nil, err
 	}
 
-	ins := &Server{
-		server:   srv,
-		listener: &lis,
-		queue:    q,
-	}
+	s.rest = rst
 
-	daqpb.RegisterServiceServer(srv, ins)
-
-	return ins, nil
+	return rst, nil
 }
 
 func (s *Server) Serve() error {
-	return s.server.Serve(*s.listener)
-}
-
-func (s *Server) Enqueue(ctx context.Context, req *daqpb.EnqueueRequest) (*daqpb.EnqueueResponse, error) {
-	msg, err := message.New(req.Body)
-
-	if err != nil {
-		return nil, err
+	if s.rpc == nil && s.rest == nil {
+		return errors.New("no server implemented")
 	}
 
-	return &daqpb.EnqueueResponse{}, s.queue.Enqueue(msg)
-}
+	ech := make(chan error)
 
-func (s *Server) Dequeue(ctx context.Context, req *daqpb.DequeueRequest) (*daqpb.DequeueResponse, error) {
-	msg, err := s.queue.Dequeue()
+	if s.rpc != nil {
+		err := s.rpc.Serve()
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return err
+		}
 	}
 
-	res := &daqpb.DequeueResponse{
-		Body: "",
-		Type: "OK",
+	if s.rest != nil {
+		err := s.rest.Serve()
+
+		if err != nil {
+			return err
+		}
 	}
 
-	if msg != nil {
-		res.Body = msg.Body
-	} else {
-		res.Type = "EMPTY"
-	}
 
-	return res, nil
-}
-
-func (s *Server) Requeue(ctx context.Context, req *daqpb.RequeueRequest) (*daqpb.RequeueResponse, error) {
-	msg, err := message.New(req.Body)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &daqpb.RequeueResponse{}, s.queue.Requeue(msg)
 }
