@@ -2,12 +2,15 @@ package queue
 
 import (
 	"container/list"
+	"context"
 	"fmt"
 	"github.com/chaseisabelle/daq/src/message"
+	"sync"
 )
 
 type Queue struct {
-	list *list.List
+	mutex sync.RWMutex
+	list  *list.List
 }
 
 func New() (*Queue, error) {
@@ -16,13 +19,21 @@ func New() (*Queue, error) {
 	}, nil
 }
 
-func (q *Queue) Enqueue(m *message.Message) error {
+func (q *Queue) Enqueue(_ context.Context, m *message.Message) error {
+	q.mutex.Lock()
+
+	defer q.mutex.Unlock()
+
 	q.list.PushBack(m)
 
 	return nil
 }
 
-func (q *Queue) Dequeue() (*message.Message, error) {
+func (q *Queue) Dequeue(_ context.Context) (*message.Message, error) {
+	q.mutex.RLock()
+
+	defer q.mutex.RUnlock()
+
 	e := q.list.Front()
 
 	if e == nil {
@@ -38,7 +49,11 @@ func (q *Queue) Dequeue() (*message.Message, error) {
 	return m, nil
 }
 
-func (q *Queue) Requeue(m *message.Message) error {
+func (q *Queue) Requeue(_ context.Context, m *message.Message) error {
+	q.mutex.Lock()
+
+	defer q.mutex.Unlock()
+
 	q.list.PushFront(m)
 
 	return nil

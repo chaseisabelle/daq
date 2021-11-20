@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	daqpb "github.com/chaseisabelle/daq/pkg"
+	"github.com/chaseisabelle/daq/pkg"
 	"github.com/chaseisabelle/daq/src/service"
 	"google.golang.org/grpc"
 	"net"

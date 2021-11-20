@@ -26,11 +26,11 @@ func (s *Service) Enqueue(ctx context.Context, req *daqpb.EnqueueRequest) (*daqp
 		return nil, err
 	}
 
-	return &daqpb.EnqueueResponse{}, s.queue.Enqueue(msg)
+	return &daqpb.EnqueueResponse{}, s.queue.Enqueue(ctx, msg)
 }
 
-func (s *Service) Dequeue(ctx context.Context, req *daqpb.DequeueRequest) (*daqpb.DequeueResponse, error) {
-	msg, err := s.queue.Dequeue()
+func (s *Service) Dequeue(ctx context.Context, _ *daqpb.DequeueRequest) (*daqpb.DequeueResponse, error) {
+	msg, err := s.queue.Dequeue(ctx)
 
 	if err != nil {
 		return nil, err
@@ -57,5 +57,5 @@ func (s *Service) Requeue(ctx context.Context, req *daqpb.RequeueRequest) (*daqp
 		return nil, err
 	}
 
-	return &daqpb.RequeueResponse{}, s.queue.Requeue(msg)
+	return &daqpb.RequeueResponse{}, s.queue.Requeue(ctx, msg)
 }

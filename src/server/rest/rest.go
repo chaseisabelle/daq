@@ -49,6 +49,8 @@ func (r *REST) dequeue(res http.ResponseWriter, req *http.Request) {
 
 		return
 	}
+
+	// convert request/response
 }
 
 func (r *REST) requeue(res http.ResponseWriter, req *http.Request) {
@@ -57,4 +59,6 @@ func (r *REST) requeue(res http.ResponseWriter, req *http.Request) {
 
 		return
 	}
+
+	// convert request/response
 }
