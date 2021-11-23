@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/golang/protobuf v1.5.2
-	github.com/google/uuid v1.1.2
+	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	google.golang.org/grpc v1.42.0
 	google.golang.org/protobuf v1.27.1
 )

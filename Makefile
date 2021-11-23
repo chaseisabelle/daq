@@ -14,3 +14,9 @@ genpb:
 			--go_out=plugins=grpc:${PB_OUT} \
 			-I/usr/include/github.com/gogo/protobuf \
 			${PROTO_DIR}/daq.proto
+
+test:
+	go test ./...
+
+vet:
+	go vet ./...

@@ -1,7 +1,11 @@
 package rest
 
 import (
+	"context"
+	"encoding/json"
+	"github.com/chaseisabelle/daq/pkg"
 	"github.com/chaseisabelle/daq/src/service"
+	"log"
 	"net/http"
 )
 
@@ -34,13 +38,30 @@ func (r *REST) Serve() error {
 }
 
 func (r *REST) enqueue(res http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodPut {
+	if req.Method != http.MethodPost {
 		http.Error(res, "method not allowed", http.StatusMethodNotAllowed)
 
 		return
 	}
 
-	// convert request/response
+	enr := &daqpb.EnqueueRequest{}
+	err := json.NewDecoder(req.Body).Decode(enr)
+
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+
+		return
+	}
+
+	eqr, err := r.service.Enqueue(context.TODO(), enr)
+
+	res.WriteHeader(http.StatusCreated)
+
+	_, err = res.Write([]byte(eqr.String()))
+
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func (r *REST) dequeue(res http.ResponseWriter, req *http.Request) {
@@ -50,7 +71,24 @@ func (r *REST) dequeue(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// convert request/response
+	der := &daqpb.DequeueRequest{}
+	err := json.NewDecoder(req.Body).Decode(der)
+
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+
+		return
+	}
+
+	dqr, err := r.service.Dequeue(context.TODO(), der)
+
+	res.WriteHeader(http.StatusCreated)
+
+	_, err = res.Write([]byte(dqr.String()))
+
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func (r *REST) requeue(res http.ResponseWriter, req *http.Request) {
@@ -60,5 +98,22 @@ func (r *REST) requeue(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// convert request/response
+	rer := &daqpb.RequeueRequest{}
+	err := json.NewDecoder(req.Body).Decode(rer)
+
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+
+		return
+	}
+
+	rqr, err := r.service.Requeue(context.TODO(), rer)
+
+	res.WriteHeader(http.StatusCreated)
+
+	_, err = res.Write([]byte(rqr.String()))
+
+	if err != nil {
+		log.Println(err)
+	}
 }
